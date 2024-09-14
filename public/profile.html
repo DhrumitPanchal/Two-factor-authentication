@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile</title>
+  </head>
+  <body>
+    <h2>Profile Page</h2>
+    <button id="registerBtn">Register Passkey</button>
+
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+
+    <script>
+      const registerBtn = document.getElementById("registerBtn");
+
+      registerBtn.addEventListener("click", async (e) => {
+        const url = new URL(window.location);
+        const userID = url.searchParams.get("userId");
+        try {
+          const response = await fetch("/register-challenge", {
+            method: "POST",
+            headers: {
+              Accept: "application.json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userID: userID }),
+          });
+
+          const challengeResult = await response.json();
+          const { options } = challengeResult;
+          console.log(options);
+          const authenticationResult =
+            await SimpleWebAuthnBrowser.startRegistration(options);
+
+          await fetch("/verify-register-challenge", {
+            method: "POST",
+            headers: {
+              Accept: "application.json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userID: userID,
+              challenge: authenticationResult,
+            }),
+          });
+        } catch (error) {
+          alert("error");
+          console.log(error);
+        }
+      });
+    </script>
+  </body>
+</html>

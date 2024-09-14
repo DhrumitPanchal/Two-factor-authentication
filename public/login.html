@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Page</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .container {
+        padding: 40px 50px;
+        height: 400px;
+        width: 500px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 20px;
+        background-color: black;
+        color: white;
+      }
+
+      form {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 20px;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+      }
+
+      form input {
+        outline: none;
+        height: 40px;
+        width: 100%;
+        padding: 0 10px;
+        border: none;
+        border-radius: 5px;
+      }
+      form button {
+        margin-top: 60px;
+        height: 40px;
+        width: 60%;
+        border: none;
+        border-radius: 5px;
+        background-color: white;
+        font-weight: bold;
+        color: black;
+        cursor: pointer;
+        transition: all;
+        transition-duration: 0.5ms;
+      }
+      form button:hover {
+        background-color: rgba(240, 240, 240, 0.701);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Login Page</h2>
+
+      <form id="form">
+        <input type="text" name="" id="Email" placeholder="Email" />
+        <button type="submit">Signup</button>
+      </form>
+    </div>
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+
+    <script>
+      const form = document.getElementById("form");
+      form.addEventListener("submit", (e) => Login(e));
+      async function Login(e) {
+        e.preventDefault();
+        const email = document.getElementById("Email").value;
+        try {
+          const response = await fetch(
+            "http://localhost:8000/login-challenge",
+            {
+              method: "POST",
+              headers: {
+                Accept: "application.json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ userID: email }),
+            }
+          );
+          const { options } = await response.json();
+
+          const authenticationResult =
+            await SimpleWebAuthnBrowser.startAuthentication(options);
+
+          console.log({
+            userID: email,
+            challenge: authenticationResult,
+          });
+          await fetch("/verify-login-challenge", {
+            method: "POST",
+            headers: {
+              Accept: "application.json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userID: email,
+              challenge: authenticationResult,
+            }),
+          });
+        } catch (error) {
+          alert("error");
+          console.log(error);
+        }
+      }
+    </script>
+  </body>
+</html>
